@@ -74,6 +74,14 @@ int exclamated_state_count = 0;
 int normal_state_moving_direction = NORMAL_STATE_MOVING_RIGHT;
 int show_moving_animation_flag = SHOW_MOVING_ANIMATION;
 
+std::vector<cv::Mat> introducing_mats;
+std::vector<cv::Mat> right_mats;
+std::vector<cv::Mat> left_mats;
+std::vector<cv::Mat> front_mats;
+std::vector<cv::Mat> back_mats;
+cv::Mat stand_mat;
+cv::Mat exclamation_mat;
+cv::Mat logo_mat;
 
 std::vector<std::string> introducing_images = {
 	"words/1.png",
@@ -161,6 +169,28 @@ std::string logo_image = "logo.png";
 Mat background(Size(WINDOW_WIDTH, WINDOW_HEIGHT), CV_8UC3);
 
 
+void loadMats() {
+	int i;
+	for (i = 0; i < introducing_images.size(); i++){
+		introducing_mats.push_back(cvLoadImage(introducing_images[i].c_str(), -1));
+	}
+	for (i = 0; i < right_images.size(); i++){
+		right_mats.push_back(cvLoadImage(right_images[i].c_str(), -1));
+	}
+	for (i = 0; i < left_images.size(); i++){
+		left_mats.push_back(cvLoadImage(left_images[i].c_str(), -1));
+	}
+	for (i = 0; i < front_images.size(); i++){
+		front_mats.push_back(cvLoadImage(front_images[i].c_str(), -1));
+	}
+	for (i = 0; i < back_images.size(); i++) {
+		back_mats.push_back(cvLoadImage(back_images[i].c_str(), -1));
+	}
+
+	stand_mat = cvLoadImage(stand_image.c_str(), -1);
+	exclamation_mat = cvLoadImage(exclamation_image.c_str(), -1);
+	
+}
 
 void overlayImage(const cv::Mat &background, const cv::Mat &foreground, cv::Mat &output, cv::Point2i location)
 {
@@ -210,13 +240,11 @@ void overlayImage(const cv::Mat &background, const cv::Mat &foreground, cv::Mat 
 }
 
 // opencv Action
-void opencvAction(const char* filename, int x, int y) {
+void opencvAction(cv::Mat a, int x, int y) {
 	Mat rst, temp;
-	Mat a = cvLoadImage(filename, -1);
-	resize(a, temp, Size(ANDROID_WIDTH, ANDROID_HEIGHT), 0, 0, INTER_CUBIC);
-	overlayImage(background, temp, rst, cv::Point(x, y));
+	overlayImage(background, a, rst, cv::Point(x, y));
 	if (current_state == EXCLAMATING_STATE){
-		Mat em = cvLoadImage(exclamation_image.c_str(), -1);
+		Mat em = exclamation_mat;
 		overlayImage(rst, em, rst, cv::Point(x + ANDROID_WIDTH + 2, y));
 	}
 	imshow(WINDOW_NAME, rst);
@@ -261,13 +289,12 @@ void handleAction() {
 			// OpenCV Action here
 			// overlay standing Android into background
 			Mat rst, temp;
-			Mat stand = cvLoadImage(stand_image.c_str(), -1);
-			resize(stand, temp, Size(ANDROID_WIDTH, ANDROID_HEIGHT), 0, 0, INTER_CUBIC);
+			Mat stand = stand_mat;
 			overlayImage(background, temp, rst, cv::Point(historyManager.now.x, historyManager.now.y));
 
 			// overlay message into background
 			
-			Mat dialog = cvLoadImage(introducing_images[introducing_current_frame_index].c_str(), -1);
+			Mat dialog = introducing_mats[introducing_current_frame_index];
 			overlayImage(rst, dialog, rst, cv::Point(historyManager.now.x + ANDROID_WIDTH + 8, historyManager.now.y - (ANDROID_HEIGHT/2)));
 
 			// show in windows
@@ -308,13 +335,13 @@ void movingForwardImage(int x, int y) {
 	}
 	
 	// opencv
-	opencvAction(front_images[historyManager.now.image_index].c_str(), x, y);
+	opencvAction(front_mats[historyManager.now.image_index], x, y);
 
 	historyManager.now.image_index++;
 }
 
 void standImage(int x, int y) {
-	opencvAction(stand_image.c_str(), x, y);
+	opencvAction(stand_mat, x, y);
 }
 
 void movingBackwardImage(int x, int y) {
@@ -323,7 +350,7 @@ void movingBackwardImage(int x, int y) {
 	}
 
 	// opencv 
-	opencvAction(back_images[historyManager.now.image_index].c_str(), x, y);
+	opencvAction(back_mats[historyManager.now.image_index], x, y);
 
 	historyManager.now.image_index++;
 }
@@ -334,7 +361,7 @@ void movingLeftImage(int x, int y) {
 	}
 
 	// opencv 
-	opencvAction(left_images[historyManager.now.image_index].c_str(), x, y);
+	opencvAction(left_mats[historyManager.now.image_index], x, y);
 
 
 	historyManager.now.image_index++;
@@ -346,7 +373,7 @@ void movingRightImage(int x, int y) {
 	}
 
 	// opencv 
-	opencvAction(right_images[historyManager.now.image_index].c_str(), x, y);
+	opencvAction(right_mats[historyManager.now.image_index], x, y);
 
 	historyManager.now.image_index++;
 }
@@ -507,6 +534,8 @@ int main(int argc, const char *argv[]) {
 	background.setTo(Scalar(1, 1, 1));
 	Mat logoImage = cvLoadImage(logo_image.c_str(), -1);
 	overlayImage(background, logoImage, background, cv::Point(WINDOW_WIDTH - logoImage.cols - 10, WINDOW_HEIGHT - logoImage.rows - 10));
+
+	loadMats();
 
 	// timer
 	UINT TimerId = SetTimer(NULL, 100, ANIMATION_PERIOD, &TimerProc);
