@@ -465,7 +465,7 @@ void CALLBACK TimerProc(HWND hWnd, UINT nMsg, UINT nIDEvent, DWORD dwTime)
 
 int main(int argc, const char *argv[]) {
 	
-	const char *const cascade = "C:\\opencv\\sources\\data\\haarcascades\\haarcascade_frontalface_alt.xml";
+	const char *const cascade = "haarcascade_frontalface_alt.xml";
 	
 
 	//std::string rootDirectory = "C:/Users/LikWee - PC/Documents/Visual Studio 2013/Projects/passerby_tracking/passerby_tracking/";
